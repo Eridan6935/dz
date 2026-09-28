@@ -1,0 +1,150 @@
+Python
+"""
+Симулятор решения задачи о 12 монетах без глубокой вложенности if/else.
+Используется метод кодирования исходов взвешиваний (Таблица решений).
+"""
+
+from typing import Dict, List, Tuple
+
+
+class CoinScaleSimulator:
+    """Класс для моделирования весов и поиска фальшивой монеты."""
+
+    def __init__(self, fake_index: int, is_heavy: bool):
+        """
+        Инициализация:
+        :param fake_index: Номер фальшивой монеты (от 1 до 12)
+        :param is_heavy: True если тяжелее, False если легче
+        """
+        # Создаем 12 монет с базовым весом 10.0
+        self.coins = [10.0] * 12
+        # Устанавливаем вес фальшивой монеты
+        self.coins[fake_index - 1] = 11.0 if is_heavy else 9.0
+
+    def weigh(self, left_group: List[int], right_group: List[int]) -> str:
+        """
+        Выполняет взвешивание двух групп монет.
+        Возвращает:
+        'L' - левая чаша тяжелее
+        'R' - правая чаша тяжелее
+        'E' - равновесие (Equal)
+        """
+        left_weight = sum(self.coins[i - 1] for i in left_group)
+        right_weight = sum(self.coins[i - 1] for i in right_group)
+
+        if left_weight > right_weight:
+            return 'L'
+        if left_weight < right_weight:
+            return 'R'
+        return 'E'
+
+
+def build_decision_lookup() -> Dict[Tuple[str, str, str], Tuple[int, str]]:
+    """
+    Строит полную таблицу соответствия 3 результатов взвешиваний 
+    и конкретной фальшивой монеты с характером дефекта.
+    """
+    lookup = {}
+    
+    # Моделируем все 24 возможных ситуации (12 монет x 2 состояния)
+    for coin_id in range(1, 13):
+        for is_heavy in [True, False]:
+            sim = CoinScaleSimulator(coin_id, is_heavy)
+            
+            # Фиксированная схема 3 взвешиваний
+            # Взвешивание 1: [1,2,3,4] против [5,6,7,8]
+            w1 = sim.weigh([1, 2, 3, 4], [5, 6, 7, 8])
+            
+            # Взвешивание 2 зависит от результата w1 (ветвление на внешнем уровне):
+            if w1 == 'E':
+                w2 = sim.weigh([9, 10, 11], [1, 2, 3])
+                if w2 == 'E':
+                    w3 = sim.weigh([12], [1])
+                else:
+                    w3 = sim.weigh([9], [10])
+            elif w1 == 'L':
+                w2 = sim.weigh([1, 2, 5], [3, 6, 9])
+                if w2 == 'E':
+                    w3 = sim.weigh([7], [8])
+                elif w2 == 'L':
+                    w3 = sim.weigh([1], [2])
+                else:  # 'R'
+                    w3 = sim.weigh([3], [9])
+            else:  # w1 == 'R'
+                w2 = sim.weigh([1, 2, 5], [3, 6, 9])
+                if w2 == 'E':
+                    w3 = sim.weigh([7], [8])
+                elif w2 == 'L':
+                    w3 = sim.weigh([3], [9])
+                else:  # 'R'
+                    w3 = sim.weigh([1], [2])
+                    
+            status_str = "тяжелее" if is_heavy else "легче"
+            lookup[(w1, w2, w3)] = (coin_id, status_str)
+            
+    return lookup
+
+
+def solve_coins_problem(sim: CoinScaleSimulator, lookup: Dict) -> Tuple[int, str]:
+    """
+    Основная функция определения монеты по сформированной таблице.
+    Избегает вложенных условий за счет декларативного поиска в словаре.
+    """
+    # 1. Шаг 1: Первое взвешивание
+    w1 = sim.weigh([1, 2, 3, 4], [5, 6, 7, 8])
+
+    # 2. Шаг 2: Второе взвешивание на основе w1
+    w2_groups = {
+        'E': ([9, 10, 11], [1, 2, 3]),
+        'L': ([1, 2, 5], [3, 6, 9]),
+        'R': ([1, 2, 5], [3, 6, 9])
+    }
+    w2 = sim.weigh(*w2_groups[w1])
+
+    # 3. Шаг 3: Третье взвешивание на основе пары (w1, w2)
+    w3_groups = {
+        ('E', 'E'): ([12], [1]),
+        ('E', 'L'): ([9], [10]),
+        ('E', 'R'): ([9], [10]),
+        
+        ('L', 'E'): ([7], [8]),
+        ('L', 'L'): ([1], [2]),
+        ('L', 'R'): ([3], [9]),
+        
+        ('R', 'E'): ([7], [8]),
+        ('R', 'L'): ([3], [9]),
+        ('R', 'R'): ([1], [2]),
+    }
+    w3 = sim.weigh(*w3_groups[(w1, w2)])
+
+    # Поиск готового решения в таблице переходов без использования if/elif/else
+    return lookup[(w1, w2, w3)]
+
+
+# --- Пример работы и самопроверка ---
+if __name__ == "__main__":
+    lookup_table = build_decision_lookup()
+
+    # Пройдемся по всем 24 возможным комбинациям для демонстрации точности
+    all_correct = True
+    for test_coin in range(1, 13):
+        for test_heavy in [True, False]:
+            simulator = CoinScaleSimulator(test_coin, test_heavy)
+            found_coin, found_status = solve_coins_problem(simulator, lookup_table)
+            
+            expected_status = "тяжелее" if test_heavy else "легче"
+            if found_coin != test_coin or found_status != expected_status:
+                all_correct = False
+                print(f"Ошибка на монете {test_coin} ({expected_status})")
+
+    if all_correct:
+        print("Все 24 сценария успешно проверены! Алгоритм работает корректно.")
+
+    # Демонстрационный запуск для одного случая:
+    target_coin = 7
+    is_heavy_coin = False  # Легкая
+    demo_sim = CoinScaleSimulator(fake_index=target_coin, is_heavy=is_heavy_coin)
+    
+    coin_num, weight_type = solve_coins_problem(demo_sim, lookup_table)
+    print(f"\nТестовый запуск:")
+    print(f"Результат: Фальшивая монета №{coin_num}, она {weight_type}.")
