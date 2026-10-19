@@ -1,0 +1,30 @@
+import tkinter as tk
+import math
+
+root = tk.Tk()
+root.title("Урок 10 - Спиральный узор из кнопок")
+root.geometry("600x600")
+root.configure(bg="#1a1a1a")
+
+index = 0
+total_buttons = 30  # Общее количество кнопок в узоре
+
+
+    angle = index * 0.5
+    radius = 35 + (index * 6)
+    
+
+    pos_x = int(300 + radius * math.cos(angle))
+    pos_y = int(270 + radius * math.sin(angle))
+
+    btn = tk.Button(root, text=str(index + 1), font=("Arial", 9), bg="#4a90e2", fg="white", width=3)
+    btn.place(x=pos_x, y=pos_y, anchor="center")
+    
+    index += 1
+    
+
+    if index % 5 == 0:
+        btn.configure(bg="#e24a4a")
+
+
+root.mainloop()
