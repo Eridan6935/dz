@@ -1,0 +1,74 @@
+import tkinter as tk
+  
+# Создаём класс интерфейса
+class Interface:
+
+    def __init__(self):
+        # Создаём главное окно
+        self.root = tk.Tk()
+
+        # Настройки главного окна
+        self.root.title("Task Manager")
+        self.root.geometry("400x450")
+        self.root.configure(bg="#222222")
+
+        # Заголовок
+        self.title = tk.Label(
+            self.root,
+            text="Мои задачи",
+            font=("Arial", 18),
+            bg="#222222",
+            fg="white"
+        )
+        self.title.pack(pady=15)
+
+        # Поле ввода задачи
+        self.entry = tk.Entry(self.root, font=("Arial", 12))
+        self.entry.pack(pady=10)
+
+        # Кнопка добавления
+        self.add_button = tk.Button(
+            self.root,
+            text="Добавить задачу",
+            command=self.add_task
+        )
+        self.add_button.pack(pady=5)
+
+        # Список задач
+        self.tasks = tk.Listbox(
+            self.root,
+            width=40,
+            height=12,
+            font=("Arial", 11)
+        )
+        self.tasks.pack(pady=10)
+
+        # Кнопка удаления
+        self.delete_button = tk.Button(
+            self.root,
+            text="Удалить задачу",
+            command=self.delete_task
+        )
+        self.delete_button.pack(pady=5)
+
+        # Запуск окна
+        self.root.mainloop()
+
+    # Добавление задачи
+    def add_task(self):
+        task = self.entry.get()
+
+        if task != "":
+            self.tasks.insert(tk.END, task)
+            self.entry.delete(0, tk.END)
+
+    # Удаление задачи
+    def delete_task(self):
+        selected = self.tasks.curselection()
+
+        if selected:
+            self.tasks.delete(selected[0])
+
+
+# Создаём объект класса Interface
+app = Interface()
