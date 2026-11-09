@@ -1,0 +1,57 @@
+
+class Food:
+    def __init__(self, name, color):
+        self.name = name
+        self.color = color
+
+    def info(self):
+        print(self.name, self.color)
+
+    def eat(self):
+        print(self.name, "можно есть")
+
+
+
+class Vegetable(Food):
+    def info(self):
+        print("Овощ:", self.name, self.color)
+
+    def eat(self):
+        print(self.name, "можно добавить в суп")
+
+
+
+class Fruit(Food):
+    def info(self):
+        print("Фрукт:", self.name, self.color)
+
+    def eat(self):
+        print(self.name, "можно есть свежим")
+
+
+
+food = Food("Продукты", "разные")
+
+carrot = Vegetable("Морковь", "оранжевая")
+tomato = Vegetable("Помидор", "красный")
+
+apple = Fruit("Яблоко", "зелёное")
+banana = Fruit("Банан", "жёлтый")
+
+
+
+print("=== Еда ===")
+food.info()
+food.eat()
+
+print("\n=== Овощи ===")
+carrot.info()
+carrot.eat()
+tomato.info()
+tomato.eat()
+
+print("\n=== Фрукты ===")
+apple.info()
+apple.eat()
+banana.info()
+banana.eat()
